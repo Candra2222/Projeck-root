@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>GitHub → Auto Deploy</title>
+<title>GitHub → Netlify Auto Deploy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -24,7 +24,7 @@ button, select, input {
   margin-top: 10px;
 }
 .primary {
-  background: #1877f2;
+  background: #00c7b7;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -40,13 +40,13 @@ button, select, input {
 <body>
 
 <div class="box">
-  <h3>GitHub → Auto Deploy</h3>
+  <h3>GitHub → Netlify Auto Deploy</h3>
 
   <button class="primary" onclick="loadRepos()">Ambil Repository</button>
 
   <select id="repoSelect"></select>
 
-  <button class="primary" onclick="deploy()">Deploy ke Vercel</button>
+  <button class="primary" onclick="deploy()">Deploy ke Netlify</button>
 
   <input id="result" readonly placeholder="URL hasil deploy">
   <button class="success" onclick="copy()">Copy</button>
@@ -71,7 +71,7 @@ async function loadRepos() {
 async function deploy() {
   const repoFullName = document.getElementById('repoSelect').value;
 
-  const res = await fetch('/api/deploy-vercel', {
+  const res = await fetch('/api/deploy-netlify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ repoFullName })
@@ -80,8 +80,7 @@ async function deploy() {
   const data = await res.json();
 
   if (data.url) {
-    document.getElementById('result').value =
-      data.url + ' (' + data.status + ')';
+    document.getElementById('result').value = data.url;
   } else {
     alert(JSON.stringify(data, null, 2));
   }
