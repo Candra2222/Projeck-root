@@ -13,8 +13,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'ENV_NOT_SET' });
   }
 
-  // 1️⃣ Ambil repoId dari GitHub
-  const gh = await fetch(
+  // 1️⃣ Ambil repo info dari GitHub
+  const ghRes = await fetch(
     `https://api.github.com/repos/${repoFullName}`,
     {
       headers: {
@@ -24,19 +24,18 @@ export default async function handler(req, res) {
     }
   );
 
-  const repo = await gh.json();
-
+  const repo = await ghRes.json();
   if (!repo.id) {
-    return res.status(500).json({ error: 'REPO_ID_FAILED', repo });
+    return res.status(500).json({ error: 'REPO_FETCH_FAILED', repo });
   }
 
-  // 2️⃣ Nama project random (VALID)
+  // 2️⃣ Nama project VALID (lowercase)
   const projectName =
-    'adult-' + Math.random().toString(36).substring(2, 8);
+    'auto-' + Math.random().toString(36).substring(2, 8);
 
-  // 3️⃣ Deploy ke Vercel
-  const vr = await fetch(
-    'https://api.vercel.com/v13/deployments',
+  // 3️⃣ BUAT PROJECT (INI YANG SEBELUMNYA KURANG)
+  const projectRes = await fetch(
+    'https://api.vercel.com/v9/projects',
     {
       method: 'POST',
       headers: {
@@ -45,6 +44,35 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         name: projectName,
+        framework: null,
+        gitRepository: {
+          type: 'github',
+          repoId: repo.id
+        }
+      })
+    }
+  );
+
+  const project = await projectRes.json();
+
+  if (!project.id) {
+    return res.status(500).json({
+      error: 'PROJECT_CREATE_FAILED',
+      detail: project
+    });
+  }
+
+  // 4️⃣ DEPLOY KE PROJECT TERSEBUT
+  const deployRes = await fetch(
+    'https://api.vercel.com/v13/deployments',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        projectId: project.id,
         gitSource: {
           type: 'github',
           repoId: repo.id
@@ -53,16 +81,15 @@ export default async function handler(req, res) {
     }
   );
 
-  const deploy = await vr.json();
+  const deploy = await deployRes.json();
 
-  // 4️⃣ URL fallback AMAN
-  const url =
-    deploy.url
-      ? `https://${deploy.url}`
-      : `https://${projectName}.vercel.app`;
+  const url = deploy.url
+    ? `https://${deploy.url}`
+    : `https://${projectName}.vercel.app`;
 
   res.json({
     url,
-    status: deploy.readyState || 'DEPLOYING'
+    status: deploy.readyState || 'DEPLOYING',
+    project: projectName
   });
 }
