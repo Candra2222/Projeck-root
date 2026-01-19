@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>GitHub Auto Deploy</title>
+<title>GitHub → Auto Deploy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -18,18 +18,23 @@ body {
   padding: 20px;
   border-radius: 10px;
 }
-input, select, button {
+button, select, input {
   width: 100%;
   padding: 10px;
   margin-top: 10px;
 }
-button {
+.primary {
+  background: #1877f2;
+  color: #fff;
   border: none;
   border-radius: 6px;
-  cursor: pointer;
 }
-.primary { background: #1877f2; color: #fff; }
-.success { background: #28a745; color: #fff; }
+.success {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+}
 </style>
 </head>
 <body>
@@ -41,12 +46,7 @@ button {
 
   <select id="repoSelect"></select>
 
-  <select id="platform">
-    <option value="vercel">Vercel</option>
-    <option value="netlify">Netlify</option>
-  </select>
-
-  <button class="primary" onclick="deploy()">Deploy</button>
+  <button class="primary" onclick="deploy()">Deploy ke Vercel</button>
 
   <input id="result" readonly placeholder="URL hasil deploy">
   <button class="success" onclick="copy()">Copy</button>
@@ -55,34 +55,23 @@ button {
 <script>
 async function loadRepos() {
   const res = await fetch('/api/github');
-  const data = await res.json();
-
-  if (data.error) {
-    alert('ERROR:\n' + JSON.stringify(data));
-    return;
-  }
+  const repos = await res.json();
 
   const select = document.getElementById('repoSelect');
   select.innerHTML = '';
 
-  data.forEach(repo => {
+  repos.forEach(r => {
     const opt = document.createElement('option');
-    opt.value = repo.full_name;
-    opt.textContent = repo.full_name;
+    opt.value = r.full_name;
+    opt.textContent = r.full_name;
     select.appendChild(opt);
   });
 }
 
 async function deploy() {
   const repoFullName = document.getElementById('repoSelect').value;
-  const platform = document.getElementById('platform').value;
 
-  if (!repoFullName) {
-    alert('Pilih repository dulu!');
-    return;
-  }
-
-  const res = await fetch(`/api/deploy-${platform}`, {
+  const res = await fetch('/api/deploy-vercel', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ repoFullName })
@@ -91,9 +80,10 @@ async function deploy() {
   const data = await res.json();
 
   if (data.url) {
-    document.getElementById('result').value = data.url;
+    document.getElementById('result').value =
+      data.url + ' (' + data.status + ')';
   } else {
-    alert('DEPLOY GAGAL:\n' + JSON.stringify(data, null, 2));
+    alert(JSON.stringify(data, null, 2));
   }
 }
 
@@ -104,5 +94,6 @@ function copy() {
   alert('Copied!');
 }
 </script>
+
 </body>
 </html>
