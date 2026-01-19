@@ -1,22 +1,34 @@
 export default async function handler(req, res) {
-const { repo, slug } = req.body;
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
+  const { repo } = req.body;
+  const token = process.env.NETLIFY_TOKEN;
 
-const response = await fetch('https://api.netlify.com/api/v1/sites', {
-method: 'POST',
-headers: {
-Authorization: `Bearer ${process.env.NETLIFY_TOKEN}`,
-'Content-Type': 'application/json'
-},
-body: JSON.stringify({ name: repo })
-});
+  if (!repo || !token) {
+    return res.status(400).json({ error: 'Missing data' });
+  }
 
+  const r = await fetch('https://api.netlify.com/api/v1/sites', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      repo: {
+        provider: 'github',
+        repo
+      }
+    })
+  });
 
-const data = await response.json();
+  const data = await r.json();
 
+  if (!r.ok) return res.status(500).json(data);
 
-res.json({
-short: `https://${process.env.SHORT_DOMAIN}/${slug}`,
-target: `https://${data.name}.netlify.app`
-});
+  res.json({
+    url: data.ssl_url || data.url
+  });
 }
