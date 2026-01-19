@@ -53,53 +53,26 @@ button {
 </div>
 
 <script>
-async function loadRepos() {
-  const res = await fetch('/api/github');
-  const data = await res.json();
-
-  const select = document.getElementById('repoSelect');
-  select.innerHTML = '';
-
-  data.forEach(repo => {
-    const opt = document.createElement('option');
-    opt.value = repo.full_name;
-    opt.textContent = repo.full_name;
-    select.appendChild(opt);
-  });
-}
-
 async function deploy() {
-  const repo = document.getElementById('repoSelect').value;
+  const repoFullName = document.getElementById('repoSelect').value;
   const platform = document.getElementById('platform').value;
 
   const res = await fetch(`/api/deploy-${platform}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ repo })
+    body: JSON.stringify({
+      repoFullName: repoFullName
+    })
   });
 
   const data = await res.json();
 
-  if (!res.ok) {
+  if (data.url) {
+    document.getElementById('result').value = data.url;
+  } else {
     alert('DEPLOY GAGAL:\n' + JSON.stringify(data, null, 2));
-    return;
   }
-
-  if (!data.url) {
-    alert('DEPLOY GAGAL: URL tidak ditemukan');
-    return;
-  }
-
-  document.getElementById('result').value = data.url;
-}
-
-function copy() {
-  const val = document.getElementById('result').value;
-  if (!val) return alert('Belum ada URL');
-  navigator.clipboard.writeText(val);
-  alert('Copied!');
 }
 </script>
-
 </body>
 </html>
