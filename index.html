@@ -79,13 +79,24 @@ async function deploy() {
   });
 
   const data = await res.json();
+
+  if (!res.ok) {
+    alert('DEPLOY GAGAL:\n' + JSON.stringify(data, null, 2));
+    return;
+  }
+
+  if (!data.url) {
+    alert('DEPLOY GAGAL: URL tidak ditemukan');
+    return;
+  }
+
   document.getElementById('result').value = data.url;
 }
 
 function copy() {
-  navigator.clipboard.writeText(
-    document.getElementById('result').value
-  );
+  const val = document.getElementById('result').value;
+  if (!val) return alert('Belum ada URL');
+  navigator.clipboard.writeText(val);
   alert('Copied!');
 }
 </script>
