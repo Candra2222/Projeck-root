@@ -3,19 +3,18 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'GITHUB_TOKEN_NOT_SET' });
   }
 
-  const response = await fetch('https://api.github.com/user/repos', {
+  const r = await fetch('https://api.github.com/user/repos', {
     headers: {
       Authorization: `token ${process.env.GITHUB_TOKEN}`,
       'User-Agent': 'vercel-app'
     }
   });
 
-  const repos = await response.json();
+  const data = await r.json();
 
-  // ⬇⬇⬇ INI BAGIAN PENTING YANG KAMU TANYA
   res.status(200).json(
-    repos.map(r => ({
-      full_name: r.full_name
+    data.map(repo => ({
+      full_name: repo.full_name
     }))
   );
 }
