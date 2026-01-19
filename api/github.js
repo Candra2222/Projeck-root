@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   const r = await fetch('https://api.github.com/user/repos', {
     headers: {
       Authorization: `token ${process.env.GITHUB_TOKEN}`,
-      'User-Agent': 'vercel-app'
+      'User-Agent': 'netlify-deployer'
     }
   });
 
