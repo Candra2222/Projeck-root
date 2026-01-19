@@ -1,8 +1,7 @@
 {
-"routes": [
-{
-"src": "/([a-zA-Z0-9]+)",
-"dest": "/api/shortlink?slug=$1"
-}
-]
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
