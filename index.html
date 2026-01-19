@@ -1,82 +1,110 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>GitHub Repo Auto Deploy</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <title>GitHub Repo Auto Deploy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+    }
 
-<style>
-body {
-font-family: Arial, sans-serif;
-background: #f2f2f2;
-padding: 20px;
-}
+    .box {
+      background: #ffffff;
+      max-width: 420px;
+      margin: auto;
+      padding: 20px;
+      border-radius: 10px;
+    }
 
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+    }
 
-.box {
-background: #ffffff;
-max-width: 420px;
-margin: auto;
-padding: 20px;
-border-radius: 10px;
-}
+    button {
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
 
+    .primary { background: #1877f2; color: #fff; }
+    .success { background: #28a745; color: #fff; }
 
-input, select, button {
-width: 100%;
-padding: 10px;
-margin-top: 10px;
-}
-
-
-button {
-border: none;
-border-radius: 6px;
-cursor: pointer;
-}
-
-
-.primary { background: #1877f2; color: #fff; }
-.success { background: #28a745; color: #fff; }
-
-
-.history {
-font-size: 13px;
-margin-top: 15px;
-word-break: break-all;
-}
-</style>
+    .history {
+      font-size: 13px;
+      margin-top: 15px;
+      word-break: break-all;
+    }
+  </style>
 </head>
 <body>
 
-
 <div class="box">
-<h3>Repo → Auto Deploy</h3>
+  <h3>Repo → Auto Deploy</h3>
 
+  <button class="primary" onclick="loadRepos()">Ambil Repository GitHub</button>
 
-<input id="ghUser" placeholder="GitHub Username">
-<input id="ghToken" type="password" placeholder="GitHub Token (opsional)">
+  <select id="repoSelect">
+    <option value="">-- Pilih Repository --</option>
+  </select>
 
+  <select id="platform">
+    <option value="vercel">Vercel</option>
+    <option value="netlify">Netlify</option>
+  </select>
 
-<button class="primary" onclick="loadRepos()">Ambil Repository</button>
+  <button class="primary" onclick="deployRepo()">Deploy</button>
 
+  <input id="result" readonly placeholder="Hasil Shortlink">
+  <button class="success" onclick="copyLink()">Copy</button>
 
-<select id="repoSelect"></select>
+  <div class="history" id="history"></div>
+</div>
 
+<script>
+async function loadRepos() {
+  const res = await fetch('/api/github');
+  const repos = await res.json();
 
-<select id="platform">
-<option value="vercel">Vercel</option>
-<option value="netlify">Netlify</option>
-</select>
+  const select = document.getElementById('repoSelect');
+  select.innerHTML = '<option value="">-- Pilih Repository --</option>';
 
+  repos.forEach(repo => {
+    const opt = document.createElement('option');
+    opt.value = repo.full_name;
+    opt.textContent = repo.full_name;
+    select.appendChild(opt);
+  });
+}
 
-<button class="primary" onclick="deployRepo()">Deploy</button>
+async function deployRepo() {
+  const repo = document.getElementById('repoSelect').value;
+  const platform = document.getElementById('platform').value;
 
+  if (!repo) return alert('Pilih repository dulu');
 
-<input id="result" readonly placeholder="Hasil Shortlink">
-<button class="success" onclick="copyLink()">Copy</button>
+  const res = await fetch(`/api/deploy-${platform}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repo })
+  });
 
+  const data = await res.json();
+  document.getElementById('result').value = data.short || 'Gagal';
+}
 
-<div class="history" id="history"></div>
+function copyLink() {
+  const input = document.getElementById('result');
+  input.select();
+  document.execCommand('copy');
+  alert('Link disalin');
+}
+</script>
+
+</body>
 </html>
