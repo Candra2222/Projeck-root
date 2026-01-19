@@ -5,7 +5,7 @@ const { repo, slug } = req.body;
 const response = await fetch('https://api.vercel.com/v13/deployments', {
 method: 'POST',
 headers: {
-Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
+Authorization: `Bearer ${process.env.VERCE_TOKEN}`,
 'Content-Type': 'application/json'
 },
 body: JSON.stringify({
