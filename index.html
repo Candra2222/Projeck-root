@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>GitHub Repo Auto Deploy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+<style>
+body {
+font-family: Arial, sans-serif;
+background: #f2f2f2;
+padding: 20px;
+}
+
+
+.box {
+background: #ffffff;
+max-width: 420px;
+margin: auto;
+padding: 20px;
+border-radius: 10px;
+}
+
+
+input, select, button {
+width: 100%;
+padding: 10px;
+margin-top: 10px;
+}
+
+
+button {
+border: none;
+border-radius: 6px;
+cursor: pointer;
+}
+
+
+.primary { background: #1877f2; color: #fff; }
+.success { background: #28a745; color: #fff; }
+
+
+.history {
+font-size: 13px;
+margin-top: 15px;
+word-break: break-all;
+}
+</style>
+</head>
+<body>
+
+
+<div class="box">
+<h3>Repo → Auto Deploy</h3>
+
+
+<input id="ghUser" placeholder="GitHub Username">
+<input id="ghToken" type="password" placeholder="GitHub Token (opsional)">
+
+
+<button class="primary" onclick="loadRepos()">Ambil Repository</button>
+
+
+<select id="repoSelect"></select>
+
+
+<select id="platform">
+<option value="vercel">Vercel</option>
+<option value="netlify">Netlify</option>
+</select>
+
+
+<button class="primary" onclick="deployRepo()">Deploy</button>
+
+
+<input id="result" readonly placeholder="Hasil Shortlink">
+<button class="success" onclick="copyLink()">Copy</button>
+
+
+<div class="history" id="history"></div>
+</html>
