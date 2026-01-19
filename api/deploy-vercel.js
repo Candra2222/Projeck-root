@@ -1,39 +1,52 @@
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  try {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
 
-  const { repo } = req.body;
-  const token = process.env.VERCE_TOKEN;
+    const { repo } = req.body;
+    const token = process.env.VERCE_TOKEN;
 
-  if (!repo || !token) {
-    return res.status(400).json({ error: 'Missing data' });
-  }
+    if (!repo) {
+      return res.status(400).json({ error: 'Repo kosong' });
+    }
 
-  const [owner, name] = repo.split('/');
-  const projectName = `${owner}-${name}`.toLowerCase();
+    if (!token) {
+      return res.status(500).json({ error: 'VERCEL_TOKEN_NOT_SET' });
+    }
 
-  const r = await fetch('https://api.vercel.com/v13/deployments', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      name: projectName,
-      gitSource: {
-        type: 'github',
-        repo,
-        ref: 'main'
+    const response = await fetch(
+      'https://api.vercel.com/v13/deployments',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: repo.split('/')[1],
+          gitSource: {
+            type: 'github',
+            repo
+          }
+        })
       }
-    })
-  });
+    );
 
-  const data = await r.json();
+    const data = await response.json();
 
-  if (!r.ok) return res.status(500).json(data);
+    if (!response.ok) {
+      return res.status(500).json({
+        error: 'DEPLOY_FAILED',
+        detail: data
+      });
+    }
 
-  res.json({
-    url: `https://${data.url}`
-  });
+    res.json({
+      url: `https://${data.url}`
+    });
+
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 }
