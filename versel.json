@@ -1,0 +1,8 @@
+{
+"routes": [
+{
+"src": "/([a-zA-Z0-9]+)",
+"dest": "/api/shortlink?slug=$1"
+}
+]
+}
