@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   }
 
   const { repo } = req.body;
-  const token = process.env.VERCEL_TOKEN;
+  const token = process.env.VERCE_TOKEN;
 
   if (!repo || !token) {
     return res.status(400).json({ error: 'Missing data' });
