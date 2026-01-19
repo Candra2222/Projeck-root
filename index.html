@@ -53,16 +53,39 @@ button {
 </div>
 
 <script>
+async function loadRepos() {
+  const res = await fetch('/api/github');
+  const data = await res.json();
+
+  if (data.error) {
+    alert('ERROR:\n' + JSON.stringify(data));
+    return;
+  }
+
+  const select = document.getElementById('repoSelect');
+  select.innerHTML = '';
+
+  data.forEach(repo => {
+    const opt = document.createElement('option');
+    opt.value = repo.full_name;
+    opt.textContent = repo.full_name;
+    select.appendChild(opt);
+  });
+}
+
 async function deploy() {
   const repoFullName = document.getElementById('repoSelect').value;
   const platform = document.getElementById('platform').value;
 
+  if (!repoFullName) {
+    alert('Pilih repository dulu!');
+    return;
+  }
+
   const res = await fetch(`/api/deploy-${platform}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      repoFullName: repoFullName
-    })
+    body: JSON.stringify({ repoFullName })
   });
 
   const data = await res.json();
@@ -72,6 +95,13 @@ async function deploy() {
   } else {
     alert('DEPLOY GAGAL:\n' + JSON.stringify(data, null, 2));
   }
+}
+
+function copy() {
+  navigator.clipboard.writeText(
+    document.getElementById('result').value
+  );
+  alert('Copied!');
 }
 </script>
 </body>
