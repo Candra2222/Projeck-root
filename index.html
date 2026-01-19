@@ -1,80 +1,66 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>GitHub Repo Auto Deploy</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>GitHub Auto Deploy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      padding: 20px;
-    }
-
-    .box {
-      background: #ffffff;
-      max-width: 420px;
-      margin: auto;
-      padding: 20px;
-      border-radius: 10px;
-    }
-
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-    }
-
-    button {
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .primary { background: #1877f2; color: #fff; }
-    .success { background: #28a745; color: #fff; }
-
-    .history {
-      font-size: 13px;
-      margin-top: 15px;
-      word-break: break-all;
-    }
-  </style>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f2f2f2;
+  padding: 20px;
+}
+.box {
+  background: #fff;
+  max-width: 420px;
+  margin: auto;
+  padding: 20px;
+  border-radius: 10px;
+}
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+}
+button {
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.primary { background: #1877f2; color: #fff; }
+.success { background: #28a745; color: #fff; }
+</style>
 </head>
 <body>
 
 <div class="box">
-  <h3>Repo → Auto Deploy</h3>
+  <h3>GitHub → Auto Deploy</h3>
 
-  <button class="primary" onclick="loadRepos()">Ambil Repository GitHub</button>
+  <button class="primary" onclick="loadRepos()">Ambil Repository</button>
 
-  <select id="repoSelect">
-    <option value="">-- Pilih Repository --</option>
-  </select>
+  <select id="repoSelect"></select>
 
   <select id="platform">
     <option value="vercel">Vercel</option>
     <option value="netlify">Netlify</option>
   </select>
 
-  <button class="primary" onclick="deployRepo()">Deploy</button>
+  <button class="primary" onclick="deploy()">Deploy</button>
 
-  <input id="result" readonly placeholder="Hasil Shortlink">
-  <button class="success" onclick="copyLink()">Copy</button>
-
-  <div class="history" id="history"></div>
+  <input id="result" readonly placeholder="URL hasil deploy">
+  <button class="success" onclick="copy()">Copy</button>
 </div>
 
 <script>
 async function loadRepos() {
   const res = await fetch('/api/github');
-  const repos = await res.json();
+  const data = await res.json();
 
   const select = document.getElementById('repoSelect');
-  select.innerHTML = '<option value="">-- Pilih Repository --</option>';
+  select.innerHTML = '';
 
-  repos.forEach(repo => {
+  data.forEach(repo => {
     const opt = document.createElement('option');
     opt.value = repo.full_name;
     opt.textContent = repo.full_name;
@@ -82,11 +68,9 @@ async function loadRepos() {
   });
 }
 
-async function deployRepo() {
+async function deploy() {
   const repo = document.getElementById('repoSelect').value;
   const platform = document.getElementById('platform').value;
-
-  if (!repo) return alert('Pilih repository dulu');
 
   const res = await fetch(`/api/deploy-${platform}`, {
     method: 'POST',
@@ -95,14 +79,14 @@ async function deployRepo() {
   });
 
   const data = await res.json();
-  document.getElementById('result').value = data.short || 'Gagal';
+  document.getElementById('result').value = data.url;
 }
 
-function copyLink() {
-  const input = document.getElementById('result');
-  input.select();
-  document.execCommand('copy');
-  alert('Link disalin');
+function copy() {
+  navigator.clipboard.writeText(
+    document.getElementById('result').value
+  );
+  alert('Copied!');
 }
 </script>
 
