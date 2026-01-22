@@ -17,23 +17,45 @@ body {
   margin: auto;
   padding: 20px;
   border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.08);
+}
+h3 {
+  text-align: center;
 }
 button, select, input {
   width: 100%;
   padding: 10px;
   margin-top: 10px;
 }
+select, input {
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+}
 .primary {
   background: #00c7b7;
   color: #fff;
-  border: none;
-  border-radius: 6px;
+}
+.primary:disabled {
+  background: #9bded7;
+  cursor: not-allowed;
 }
 .success {
   background: #28a745;
   color: #fff;
-  border: none;
-  border-radius: 6px;
+}
+.success:disabled {
+  background: #a6d8b0;
+}
+.footer {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 12px;
+  opacity: .6;
 }
 </style>
 </head>
@@ -42,55 +64,102 @@ button, select, input {
 <div class="box">
   <h3>GitHub → Netlify Auto Deploy</h3>
 
-  <button class="primary" onclick="loadRepos()">Ambil Repository</button>
+  <button id="btnLoad" class="primary" onclick="loadRepos()">Ambil Repository</button>
 
-  <select id="repoSelect"></select>
+  <select id="repoSelect" disabled>
+    <option value="">— Pilih repository —</option>
+  </select>
 
-  <button class="primary" onclick="deploy()">Deploy ke Netlify</button>
+  <button id="btnDeploy" class="primary" onclick="deploy()" disabled>
+    Deploy ke Netlify
+  </button>
 
   <input id="result" readonly placeholder="URL hasil deploy">
-  <button class="success" onclick="copy()">Copy</button>
+
+  <button id="btnCopy" class="success" onclick="copy()" disabled>
+    Copy
+  </button>
+
+  <div class="footer">tools by sesepuh © 2026</div>
 </div>
 
 <script>
 async function loadRepos() {
-  const res = await fetch('/api/github');
-  const repos = await res.json();
-
+  const btn = document.getElementById('btnLoad');
   const select = document.getElementById('repoSelect');
-  select.innerHTML = '';
 
-  repos.forEach(r => {
-    const opt = document.createElement('option');
-    opt.value = r.full_name;
-    opt.textContent = r.full_name;
-    select.appendChild(opt);
-  });
+  btn.disabled = true;
+  btn.textContent = 'Memuat...';
+
+  try {
+    const res = await fetch('/api/github');
+    const repos = await res.json();
+
+    select.innerHTML = '<option value="">— Pilih repository —</option>';
+
+    if (!Array.isArray(repos) || repos.length === 0) {
+      alert('Repository tidak ditemukan');
+      return;
+    }
+
+    repos.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.full_name;
+      opt.textContent = r.full_name;
+      select.appendChild(opt);
+    });
+
+    select.disabled = false;
+    document.getElementById('btnDeploy').disabled = false;
+
+  } catch (err) {
+    alert('Gagal mengambil repository');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Ambil Repository';
+  }
 }
 
 async function deploy() {
   const repoFullName = document.getElementById('repoSelect').value;
+  if (!repoFullName) {
+    return alert('Pilih repository terlebih dahulu');
+  }
 
-  const res = await fetch('/api/deploy-netlify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ repoFullName })
-  });
+  const btn = document.getElementById('btnDeploy');
+  btn.disabled = true;
+  btn.textContent = 'Deploying...';
 
-  const data = await res.json();
+  try {
+    const res = await fetch('/api/deploy-netlify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ repoFullName })
+    });
 
-  if (data.url) {
-    document.getElementById('result').value = data.url;
-  } else {
-    alert(JSON.stringify(data, null, 2));
+    const data = await res.json();
+
+    if (data.url) {
+      document.getElementById('result').value = data.url;
+      document.getElementById('btnCopy').disabled = false;
+    } else {
+      alert(JSON.stringify(data, null, 2));
+    }
+
+  } catch (e) {
+    alert('Deploy gagal');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Deploy ke Netlify';
   }
 }
 
 function copy() {
-  navigator.clipboard.writeText(
-    document.getElementById('result').value
-  );
-  alert('Copied!');
+  const val = document.getElementById('result').value;
+  if (!val) return;
+
+  navigator.clipboard.writeText(val);
+  alert('Link berhasil disalin');
 }
 </script>
 
